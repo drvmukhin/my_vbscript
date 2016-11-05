@@ -1,0 +1,1 @@
+C:\UnixUtils\tail.exe -n 40 -f C:\VBScript\log\debug.log
