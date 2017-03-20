@@ -1,4 +1,4 @@
-Dim strDirectoryWork, D0, objFSO, objShell, objEnvar, CurrentDate, CurrentTime, nDebug, nInfo, objDebug, ShowLog
+Dim strDirectoryWork, D0, objFSO, objShell, objEnvar, CurrentDate, CurrentTime, nDebug, nInfo, objDebug, ShowLog, objIE
 Const ForAppending = 8
 Const ForWriting = 2
 Const HttpTextColor1 = "#292626"
@@ -28,6 +28,31 @@ CurrentDate = Date()
 CurrentTime = Time()
 D0 = DateSerial(2015,1,1)
 
+Class Devices
+	Private device_id
+	Private device_activity
+	'
+	'
+	Public Property Let Id(strID)
+		device_id = strID
+	End Property
+	'
+	'
+	Public Property Let Activity(strAct)
+		device_activity = strAct
+	End Property
+	'
+	'
+	Public Property Get Id()
+		Id = device_id
+	End Property
+	'
+	'
+	Public Property Get Activity()
+		Activity = device_activity
+	End Property
+End Class
+
 Main()
 	Call TrDebug("SCRIPT END", "", objDebug, MAX_LEN , 3, nInfo)
 If IsObject(objDebug) Then objDebug.Close : End If
@@ -51,32 +76,10 @@ Sub Main()
 	bVerbose = False
 	bMultipleInstanceAllowed = False
 	If Not OpenLogSession(objDebug, strDebugFile, UtilsFolder, bMultipleInstanceAllowed, ShowLog, bVerbose) Then Exit Sub
-'	On Error Resume Next
-'	Set objDebug = objFSO.OpenTextFile(strDirectoryWork & "\Log\" & DEBUG_FILE & ".log",ForWriting,True)
-'	Select Case Err.Number
-'		Case 0
-'		Case 70
-'		    MsgBox "Script is Already Running"
-'			Exit Sub
-'		Case Else 
-'		    MsgBox "Error: Can't run the script" & chr(13) & Err.Description
-'			Exit Sub
-'	End Select
-'	On Error goto 0
-	wscript.sleep 1000
-'	If ShowLog Then 
-'		strLaunch = "C:\UnixUtils\tail.exe -n 40 -f " & strDirectoryWork & "\Log\" & DEBUG_FILE & ".log"
-'		If Not GetWinAppPID(strPID, strParrentID, DEBUG_FILE, "tail.exe", nDebug) Then 
-'			objEnvar.run (strLaunch)
-'		Else
-'			Call FocusToParentWindow(strPID)
-'		End If
-'	End If
+	'
 	' Print out PID of the script process
 	Call GetWinAppPID(strPID, strParrentID, "test.vbs", "wscript.exe", nDebug)
 	Call TrDebug("test.vbs script is running with PID: " & strPID, "", objDebug, MAX_LEN , 1, nInfo)
-'	strLaunch = strDirectoryWork & "\tail.bat"
-'	objShell.run (strLaunch)
     '------------------------------------------------
 	'   MAIN SYCLE
 	'------------------------------------------------
@@ -90,10 +93,237 @@ Sub Main()
 	Dim objLocalGroup, objDomainUser, DomName
 	Dim objWindows
 	Dim PID, strParentPID
-	nBlock = 38
 	
+	nBlock = 141
 	Select Case nBlock
-	    Case 47
+		Case 146
+		    MsgBox "Start"
+			temp = "xxxxxxxxx"
+			key = "huasHIYhkasdh11"
+			temp = encrypt(temp,key)
+			WScript.Echo temp
+			key = "huasHIYhkasdh12"
+			temp = Decrypt(temp,key)
+			WScript.Echo temp
+		
+		Case 145
+			Dim x, y, z
+			y=Array(1,2,3)
+			x=Array(y,Array(3,4,5), Array(6,7,8))
+			z=Array(x, Array(7,8,9), Array(10,11,12)) 
+			Call TrDebug("z(0)(0)(0)= " & z(0)(0)(0), "", objDebug, MAX_LEN , 1, nInfo)
+	    Case 144 
+				Call GetFileLineCountSelect("C:\VBScript\accounts.dat", vFileLines,"Ivan", "[End", "ljkhjkhj", 1)
+	    Case 143
+				vArray = Array(1,2,3)
+				strLine = Join(vArray,",")
+				MsgBox strLine
+		Case 141
+'			Dim objRegEx
+			Set objRegEx = CreateObject("VBScript.RegExp")
+			objRegEx.Global = False			
+			Const IE_PAUSE = 200
+			Dim vAcademics(9,20)
+			nRetries = 4
+			vAcademics(0,0) = "Classroom Name"
+			vAcademics(1,0) = "Grade"
+			vAcademics(2,0) = "Progress"
+			vAcademics(3,0) = "Date List"			
+			vAcademics(4,0) = "Score List"
+			vAcademics(5,0) = "Category List"
+			vAcademics(6,0) = "Weight List"			
+			vAcademics(7,0) = "Count"
+			vAcademics(8,0) = "Progress Report url"
+			nAcademics = UBound(vAcademics,1)-1
+			vCred = Array(_
+						"https://evhs.schoolloop.com/portal/parent_home",_
+						"vmukhin",_
+						"Null",_
+						"ANASTASIA",_
+						"MUKHINA")
+			If LoginEVHS(objIE, vCred,nRetries,nInfo) Then 
+				Call TrDebug("Portal Page loaded OK" , "", objDebug, MAX_LEN , 1, nInfo)
+			Else 
+				Exit Sub
+			End If
+			Call TrDebug("Location Origin: " & objIE.Document.Location.origin, "", objDebug, MAX_LEN , 1, nInfo)
+			Call TrDebug("Location Hostname: " & objIE.Document.Location.hostname, "", objDebug, MAX_LEN , 1, nInfo)
+			Exit Sub
+			Call SelectStudentPage(objIE, vCred, nInfo)
+			nIndex = 0
+			For Each oTable in objIE.Document.getElementsByTagName("table")
+				If ProgressReportExists(oTable, nInfo) Then 
+					nIndex = nIndex + 1
+					Call GetProgressReportHref(oTable, vAcademics,nIndex,nInfo)
+					Call GetClassroom(oTable, vAcademics,nIndex,nInfo)
+					Call GetGrade(oTable, vAcademics,nIndex,nInfo)
+					Call GetScore(oTable, vAcademics,nIndex,nInfo)
+				End If 
+			Next
+			nIndex = 1
+			Do While vAcademics(0,nIndex) <> ""
+				Call TrDebug(vAcademics(0,0) & ": " & vAcademics(0,nIndex),"", objDebug, MAX_LEN , 3, nInfo)
+				Call TrDebug(vAcademics(1,0) & ": " & vAcademics(1,nIndex),"" , objDebug, MAX_LEN , 1, nInfo)
+				Call TrDebug(vAcademics(2,0) & ": " & vAcademics(2,nIndex),"", objDebug, MAX_LEN , 1, nInfo)
+				Call TrDebug(vAcademics(nAcademics,0) & ": " & Left(vAcademics(nAcademics,nIndex),30),"", objDebug, MAX_LEN , 1, nInfo)
+				nIndex = nIndex + 1
+			Loop
+			'
+			'  Load Student Scores
+			nIndex = 1
+			Do While vAcademics(0,nIndex) <> ""
+				objRegEx.Pattern = "https://.+\.com/"
+				' Validate progress report link
+				If objRegEx.Test(vAcademics(nAcademics,nIndex)) Then 
+					objIE.navigate vAcademics(nAcademics,nIndex)
+					nTimer = 0
+					Do
+						WScript.Sleep 200
+						nTimer = nTimer + 0.2
+						If nTimer > 10 Then exit do
+					Loop While objIE.Busy
+					Call TrDebug("Page 3 loaded in: " & nTimer & "sec.", "", objDebug, MAX_LEN , 1, nInfo)
+					wscript.sleep 2000
+					Call GetAssessmentsList(objIE, vAcademics, nIndex, nInfo)
+				End If
+				nIndex = nIndex + 1
+			Loop
+			nIndex = 1
+			Do While vAcademics(0,nIndex) <> ""
+				Call TrDebug(vAcademics(0,0) & ": " & vAcademics(0,nIndex),"", objDebug, MAX_LEN , 3, nInfo)
+				For nRow = 1 to nAcademics - 1
+					Call TrDebug(vAcademics(nRow,0) & ": " & vAcademics(nRow,nIndex),"", objDebug, MAX_LEN , 1, nInfo)
+				Next
+				nIndex = nIndex + 1
+			Loop	
+		Case 142 ' Downloading files from Jnpr sharepoint page or any hhtp table with links to pptx files
+			' see: https://msdn.microsoft.com/en-us/library/windows/desktop/bb773974(v=vs.85).aspx
+			Set objWindows = objApp.Windows
+			If IsObject(objWindows) Then
+				strLine = ""
+				'MsgBox objWindows.Count
+				For Each Window in objWindows
+					'$Wpid = ObjName($Window,3)
+					strLine = Window.LocationName & " ; " & Window.FullName & " ; " & Wpid 
+					Call TrDebug(strLine, "", objDebug, MAX_LEN , 1, nInfo)						
+					If InStr(Lcase(Window.FullName), "iexplore") > 0 Then				
+						strURL = """" & Window.Document.Location.href & """"
+						Call TrDebug("You browsing the URL: ", strURL, objDebug, MAX_LEN , 1, nInfo)
+						nTable = 0
+						For each table in Window.Document.getElementsByTagName("table")
+						    nTable = nTable + 1
+							If nTable > 1 Then Exit for
+						    Call TrDebug("TABLE " & nTable , "", objDebug, MAX_LEN , 1, nInfo)
+						    nTr = 0
+							nFile = 0
+						    For each Row in table.getElementsByTagName("tr")
+						        nTr = nTr + 1
+								nCell = 0
+								For each Cell in Row.getElementsByTagName("td")
+								    nCell = nCell + 1
+									If nCell = 5 then 
+									    For each Anchor in Cell.getElementsByTagName("a")
+										    nFile = nFile + 1
+											Do
+												URL = Anchor.href
+												strSaveAs = Anchor.InnerText
+												If Len(URL) > 255 Then
+												   Call TrDebug("File #" & nFile & ": Url is longer then 255 characters. " , "SKIP", objDebug, MAX_LEN , 1, nInfo)
+												   Exit Do
+												End If
+												If objFSO.FileExists(strDirectoryWork & "\" & strSaveAs) Then 
+												   Call TrDebug(Left(strSaveAs,30) & ": File already exists. " , "SKIP", objDebug, MAX_LEN , 1, nInfo)
+												   Exit Do
+												End If
+												If InStr(strSaveAs,".pptx") Then 
+													Call TrDebug("Download: " & Left(strSaveAs,50)  , "", objDebug, MAX_LEN , 1, nInfo)
+													'Call DownloadingFile(URL, strDirectoryWork, strSaveAs)
+													'    Call Set_IE_obj (g_objIE)
+														'g_objIE.Offline = True
+													'	g_objIE.navigate URL
+													'	Do
+													'		WScript.Sleep 200
+													'	Loop While g_objIE.Busy
+													Set objPPT = CreateObject("PowerPoint.Application")
+													objPPT.Visible = True
+													Set objPresentation = objPPT.presentations.Open(URL, , , msoFalse)								
+													wscript.sleep 15000
+													objPresentation.SaveAs (strDirectoryWork & "\" & strSaveAs)
+													objPPT.Quit
+													Set objPPT = Nothing
+													Set objPresentation = Nothing
+												End If
+												Exit Do
+											Loop
+										Next
+									End If
+								Next
+						    Next
+						    Call TrDebug("Parser found " & nTr & " rows in table " & nTable, "", objDebug, MAX_LEN , 1, nInfo)
+						Next
+						Call TrDebug("Parser found " & nTable & " tables", "", objDebug, MAX_LEN , 1, nInfo)
+						Set objDataFileName = objFSO.OpenTextFile(strDirectoryWork & "\sharepoint_jnpr.txt",2,True)
+		                objDataFileName.WriteLine "Test"
+						objDataFileName.Close
+						' Call WriteArrayToFile(strDirectoryWork & "\sharepoint_jnpr.txt",vIncl, UBound(vIncl),1,0)
+						If InStr(Window.Document.Location.href, "cnn") > 0 Then 
+							Window.GoHome
+							wscript.sleep 5000
+						End If
+					End If
+				Next
+			End If		
+
+		Case 54
+			Dim objRegEx
+			Set objRegEx = CreateObject("VBScript.RegExp")
+			objRegEx.Global = False			
+			strLin1 = "'#   Function IE_MSG_Internal (g_objIE, vIE_Scale, strTitle, vLine, ByVal nLine)"
+			strLin2 = "END OF LIST"
+			strLin3 = "function IE_MSG_Internal (g_objIE, vIE_Scale, strTitle, vLine, ByVal nLine)"
+			strLin4 = "end   function"
+			objRegEx.Pattern = "'#   Function "
+			If objRegEx.Test(strLin1) Then Call TrDebug("Patter1: OK", "",objDebug, MAX_LEN , 1, 1)	 else Call TrDebug("Patter1: FAILED", "",objDebug, MAX_LEN , 1, 1)
+			objRegEx.Pattern = "END OF LIST"
+			If objRegEx.Test(strLin2) Then Call TrDebug("Patter2: OK", "",objDebug, MAX_LEN , 1, 1)	 else Call TrDebug("Patter2: FAILED", "",objDebug, MAX_LEN , 1, 1)
+			objRegEx.Pattern = "^\s{0,2}[Ff]unction\s{1,2}\w*\s{0,3}\(.*\)"
+			If objRegEx.Test(strLin3) Then Call TrDebug("Patter3: OK", "",objDebug, MAX_LEN , 1, 1)	 else Call TrDebug("Patter3: FAILED", "",objDebug, MAX_LEN , 1, 1)
+			objRegEx.Pattern = "[Ee]nd\s{1,3}[Ff]unction"
+			If objRegEx.Test(strLin4) Then Call TrDebug("Patter4: OK", "",objDebug, MAX_LEN , 1, 1)	 else Call TrDebug("Patter4: FAILED", "",objDebug, MAX_LEN , 1, 1)
+
+		Case 52
+		   MsgBox Now
+		Case 51
+		   strLine = CopyFileToString("C:\VBScript\test.txt")
+		   Call TrDebug("Text: " & strLine, "",objDebug, MAX_LEN , 1, 1)	
+		Case 50
+			Set objFile = objFSO.GetFile("C:\VBScript\task_find_and_kill.vbs.new")
+			Call TrDebug("Name:      " & objFile.Name, "",objDebug, MAX_LEN , 1, 1)
+			Call TrDebug("Path:      " & objFile.Path, "",objDebug, MAX_LEN , 1, 1)
+			Call TrDebug("Ext:       " &  objFSO.GetExtensionName(objFile.Path), "",objDebug, MAX_LEN , 1, 1)
+			Call TrDebug("Base Name: " &  objFSO.GetBaseName(objFile.Path), "",objDebug, MAX_LEN , 1, 1)
+			Call TrDebug("ShortName: " & objFile.ShortName, "",objDebug, MAX_LEN , 1, 1)
+			Call TrDebug("Type:      " & objFile.Type, "",objDebug, MAX_LEN , 1, 1)
+				   
+		Case 49
+		    Dim KidsDevice, vDevices
+		    Redim KidsDevices(1)
+			Set KidsDevices(0) = New Devices
+			KidsDevices(0).Id = "IVAN-PC"
+			KidsDevices(0).Activity = "ACTIVE"
+			Redim preserve KidsDevices(2)
+			Set KidsDevices(1) = New Devices
+			KidsDevices(1).Id = "MEDIA-PC"
+			KidsDevices(1).Activity = "INACTIVE"
+			For each host in KidsDevices
+				If IsObject(host) Then 
+					Call TrDebug("strDeviceID: " & host.id & " Status: " & host.activity, "",objDebug, MAX_LEN , 1, 1)	
+				End If 
+			Next
+			
+	    Case 48
+		        If IsDate("11/5/2016 12:11:50 AM") Then MsgBox "Ok"
+		Case 47
 				Set objNet = WScript.CreateObject("WScript.Network")
                 Wscript.Echo "Your Computer Name is " & objNet.ComputerName
                 WScript.Echo "Your Username is " & objNet.UserName
@@ -252,9 +482,27 @@ Sub Main()
 
 	    Case 41
 		        Dim StrRecord, nLen
+				Dim vWebApplication, vWebApplicationPattern
+				'
+				'  WebApplications Catalog
+				vWebApplication = Array("YouTube",_
+										"Google Drive",_
+										"Google Search",_
+										"Google Docs",_
+										"Wikipedia",_
+										"Schoolloop",_
+										"Amazon")
+				vWebApplicationPattern = Array("youtube",_
+										"google drive",_
+										"google search",_
+										"google docs",_
+										"wikipedia",_
+										"(\S+) (\S+)'s portal:",_
+										"amazon.com")
+				' Start block cycle
 				nInd = 0
 		        strWinUser = "Vasily"
-				Do While nInd < 50
+				Do While nInd < 1
 					strCmd = "tasklist /V /fo csv /fi ""USERNAME eq " & strWinUser & """"
 					Call RunCmd("127.0.0.1", "", vCmdOut, strCMD,"", nDebug)
 					strPID = ""
@@ -267,28 +515,43 @@ Sub Main()
 								strAppName = Right(strAppName,Len(strAppName)-1)
 								strRecord = strAppName & ":" & strPID 
 								strTitle = Split(strLine,""",""")(8)
+								
 								If ((strTitle <> "N/A""") and (Len(Trim(strTitle)) > 5)) Then 
-									nLen = InStrRev(strTitle," - ")
-								    If nLen > 0 Then strTitle = Left(strTitle,nLen)
-									If InStr(strTitle,"YouTube") Then 
-								        strRecord = strRecord & ":YouTube"
-									    nLen = InStrRev(strTitle," - ")
-										Select Case nLen 
-										    Case 0
-											   strTitle = "Main youtube page"
-											Case Else 
-											   strTitle = Left(strTitle,nLen)
-										End Select
-										strRecord = strRecord & ":" & strTitle
-										Call WriteStringToFile("C:\DVLP\data\youtubetitles.txt",strRecord,true,0)
-										Call TrDebug(strRecord,"", objDebug, MAX_LEN , 1, nInfo)
-									Else 
-									    strRecord = strRecord & ":Inet:" & strTitle
-										Call WriteStringToFile("C:\DVLP\data\youtubetitles.txt",strRecord,true,0)
-										Call TrDebug(strRecord,"", objDebug, MAX_LEN , 1, nInfo)
-									End If
-								Else 
-								    strRecord = strRecord & ":Process:Nothing to analyse"
+								    Call TrDebug(strTitle,"", objDebug, MAX_LEN , 1, nInfo)
+								    strApp = GetInetApplication(strTitle,vWebApplication,vWebApplicationPattern)
+									Select Case strApp
+										Case "Amazon"
+											strRecord = strRecord & ":Amazon"
+											nLen = InStrRev(strTitle," - ")
+											Select Case nLen 
+												Case 0
+												   strTitle = "Main Amazon page"
+												Case Else 
+												   strTitle = Left(strTitle,nLen)
+											End Select
+											strRecord = strRecord & ":" & strTitle
+										Case "YouTube"
+											strRecord = strRecord & ":YouTube"
+											nLen = InStrRev(strTitle," - ")
+											Select Case nLen 
+												Case 0
+												   strTitle = "Main youtube page"
+												Case Else 
+												   strTitle = Left(strTitle,nLen)
+											End Select
+											strRecord = strRecord & ":" & strTitle
+										Case Else 
+											strRecord = strRecord & ":" & strApp
+											nLen = InStrRev(strTitle," - ")
+											Select Case nLen 
+												Case 0
+												   strTitle = "Title page"
+												Case Else 
+												   strTitle = Left(strTitle,nLen)
+											End Select
+											strRecord = strRecord & ":" & strTitle
+									End Select
+									Call TrDebug(strRecord,"", objDebug, MAX_LEN , 1, nInfo)
 								End If
 							'	Call KillWinAppPID(strPID, "None", strAppName, nInfo)
 							End If
@@ -315,16 +578,22 @@ Sub Main()
 	'			MsgBox objWindows.Count
 				For Each Window in objWindows
 					'$Wpid = ObjName($Window,3)
-					strLine = Window.LocationName & " ; " & Window.FullName & " ; " & Wpid 
-					Call TrDebug(strLine, "", objDebug, MAX_LEN , 1, nInfo)						
-					If InStr(Window.FullName, "iexplore") > 0 Then				
+					strLine=Window.FullName & " ; " & Window.LocationName  
+'					Call TrDebug(strLine, "", objDebug, MAX_LEN , 1, nInfo)
+					On Error Resume Next
+					If InStr(Window.FullName, "iexplore") > 0 Then						
+						Call TrDebug("Found " & Window.FullName, "", objDebug, MAX_LEN , 1, nInfo)									
+						Call TrDebug("With title: " &  Window.Document.Title, "", objDebug, MAX_LEN , 1, nInfo)									
 						strURL = """" & Window.Document.Location.href & """"
 						Call TrDebug("You browsing the URL: ", strURL, objDebug, MAX_LEN , 1, nInfo)									
-						If InStr(Window.Document.Location.href, "cnn") > 0 Then 
-							Window.GoHome
-							wscript.sleep 5000
+						If InStr(Window.Document.Title, "Admin Panel") = 0 Then 
+							Window.quit
+							Set Window = Nothing
+						Else 
+							Call TrDebug("This is KSLD Admin Panel: ", "Skip closing", objDebug, MAX_LEN , 1, nInfo)									
 						End If
 					End If
+					On Error Goto 0
 				Next
 			End If		
 	    Case 37
@@ -585,6 +854,7 @@ Sub Main()
 		    strDirectoryUser = objEnvar.ExpandEnvironmentStrings("%USERPROFILE%")
 	        strComputerName = objEnvar.ExpandEnvironmentStrings("%COMPUTERNAME%")
 	        strSysFolder = Split(objEnvar.ExpandEnvironmentStrings("%PATH%"),";")(0)
+			Call TrDebug( "ScriptName: "  & Split(Wscript.ScriptFullName,"\")(UBound(Split(Wscript.ScriptFullName,"\")))  , "", objDebug, MAX_LEN , 1, nInfo)			
 			Call TrDebug( "strDirectoryWork: "  & strDirectoryWork  , "", objDebug, MAX_LEN , 1, nInfo)
 			Call TrDebug( "strDirectoryUser: "  & strDirectoryUser  , "", objDebug, MAX_LEN , 1, nInfo)
 			Call TrDebug( "strComputerName: "  & strComputerName  , "", objDebug, MAX_LEN , 1, nInfo)
@@ -918,51 +1188,6 @@ Redim vScreen(2)
 		GetWin32Screen = True
 	Next
 	On Error Goto 0
-End Function
-'#######################################################################
-' Function GetFileLineCountSelect - Returns number of lines int the text file
-'#######################################################################
- Function GetFileLineCountSelect(strFileName, ByRef vFileLines,strChar1, strChar2, strChar3, nDebug)
-    Dim nIndex
-	Dim strLine
-	Dim objDataFileName
-    strFileWeekStream = ""	
-	If objFSO.FileExists(strFileName) Then 
-		On Error Resume Next
-		Err.Clear
-		Set objDataFileName = objFSO.OpenTextFile(strFileName)
-		If Err.Number <> 0 Then 
-			Call TrDebug("GetFileLineCountSelect: ERROR: CAN'T OPEN FILE:", strFileName, objDebug, MAX_LEN, 0, 1)
-			On Error Goto 0
-			Redim vFileLines(0)
-			GetFileLineCountSelect = 0
-			Exit Function
-		End If
-	Else
-	    Call TrDebug("GetFileLineCountSelect: ERROR: CAN'T FIND FILE:", strFileName, objDebug, MAX_LEN, 0, 1)
-		Redim vFileLines(0)
-		GetFileLineCountSelect = 0
-		Exit Function
-	End If 
-    Redim vFileLines(0)
-	Set objDataFileName = objFSO.OpenTextFile(strFileName)	
-	If nDebug = 1 Then objDebug.WriteLine "           NOW TRYING TO RIGHT INTO AN ARRAY        "
-	nIndex = 0
-    Do While objDataFileName.AtEndOfStream <> True
-		strLine = objDataFileName.ReadLine
-		Select Case Left(strLine,1)
-			Case strChar1
-			Case strChar2
-			Case strChar3
-			Case Else
-					Redim Preserve vFileLines(nIndex + 1)
-					vFileLines(nIndex) = strLine
-					If nDebug = 1 Then objDebug.WriteLine "GetFileLineCountSelect: vFileLines(" & nIndex & ")="  & vFileLines(nIndex) End If  
-					nIndex = nIndex + 1
-		End Select
-	Loop
-	objDataFileName.Close
-    GetFileLineCountSelect = nIndex
 End Function
  
 '#######################################################################
@@ -1913,4 +2138,971 @@ Dim strUser, pUser, pDomain, wql
 		Exit Do
 	Loop
 	Set objWMI = Nothing
+End Function
+'--------------------------------------------------
+'   Function GetInetApplication()
+'--------------------------------------------------
+Function GetInetApplication(strLine,vApplication, vPattern)
+Dim objRegEx, Pattern, nIndex
+	Set objRegEx = CreateObject("VBScript.RegExp")
+	objRegEx.Global = True
+	nIndex = 0
+    GetInetApplication = "Inet"
+	For each Pattern in vPattern
+		If Pattern = "" Then exit for
+		objRegEx.Pattern = Pattern
+		If objRegEx.Test((LCase(strLine))) Then
+		    GetInetApplication = vApplication(nIndex)
+			Set objRegEx = Nothing
+			Exit Function
+		End If
+		nIndex = nIndex + 1
+	Next
+	Set objRegEx = Nothing
+End Function
+'------------------------------------------------------------------------
+'	Function CopyFileToString(strSourceFile)
+'------------------------------------------------------------------------
+Function CopyFileToString(strSourceFile)
+Dim strFileString
+Dim objFSO,objSourceFile
+	Set objFSO = CreateObject("Scripting.FileSystemObject")
+	Const ForAppending = 8
+	Const ForWriting = 2
+	Const ForReading = 1
+	If objFSO.FileExists(strSourceFile) Then 	
+		On Error Resume Next
+			Err.Clear
+			Set objSourceFile = objFSO.OpenTextFile(strSourceFile,ForReading,True)
+			Select Case Err.Number
+				Case 0 ' Do Nothing
+				Case Else 
+					Err.Clear
+					CopyFileToString = "-1"
+					Set objFSO = Nothing
+					On Error Goto 0
+					Exit Function
+			End Select	
+        Err.Clear
+		strFileString = objSourceFile.ReadAll
+		objSourceFile.close		
+		Set objSourceFile = Nothing
+		If Err.Number > 0 Then
+					Err.Clear
+					CopyFileToString = "-2"
+					Set objFSO = Nothing
+					On Error Goto 0
+					Exit Function		
+		End If 
+		On Error Goto 0	
+    End If		
+	Set objFSO = Nothing
+	CopyFileToString = strFileString
+End Function 
+	
+'----------------------------------------------------------
+'   Function Set_IE_obj (byRef objIE)
+'----------------------------------------------------------
+Function Set_IE_obj (byRef objIE)
+	Dim nCount
+	Set_IE_obj = False
+	nCount = 0
+	Do 
+		On Error Resume Next
+		Err.Clear
+		Set objIE = CreateObject("InternetExplorer.Application")
+		Select Case Err.Number
+			Case &H800704A6 
+				wscript.sleep 1000
+				nCount = nCount + 1
+				Call  TrDebug ("Set_IE_obj ERROR:" & Err.Number & " " & Err.Description, "", objDebug, MAX_LEN, 1, 1)
+				If nCount > 4 Then
+					On Error goto 0
+					Exit Function
+				End If
+			Case 0 
+				Set_IE_obj = True
+				On Error goto 0
+				Exit Function
+			Case Else 
+				Call  TrDebug ("Set_IE_obj ERROR:" & Err.Number & " " & Err.Description, "", objDebug, MAX_LEN, 1, 1)
+				On Error goto 0
+				Exit Function
+		End Select
+	On Error goto 0
+	Loop
+End Function
+'-----------------------------------------
+'  Function LoginEVHS(ByRef g_objIE)
+'-----------------------------------------
+Function LoginEVHS(ByRef g_objIE, vCred, nRetries, nInfo)
+Dim Anchore, nTimer, URL, nCount, Login_url, vIE_Scale, strLogin, strPassword
+Dim vvMsg(10,10)
+Dim objRegEx
+	Set objRegEx = CreateObject("VBScript.RegExp")
+	objRegEx.Global = False
+	objRegEx.Pattern = "https://.+\.com/"
+    LoginEVHS = False
+	URL = vCred(0)
+	HostURL = objRegEx.Execute(URL).Item(0).Value
+	'
+	'   Open iexplore.exe
+	Call Set_IE_obj (g_objIE)
+	g_objIE.Visible = True
+	'
+	'   Navigate to schoolloop portal page
+	nCount = 1
+	Action = "LOAD PAGE"
+	Do
+		If nCount > nRetries Then 
+			Exit Do
+			
+		End If 
+		Select Case Action
+			Case "LOAD PAGE"
+					g_objIE.navigate URL
+					nTimer = 0
+					Do
+						WScript.Sleep 200
+						nTimer = nTimer + 0.2
+						If nTimer > 10 Then exit do
+					Loop While g_objIE.Busy
+					Call TrDebug(Action & ": Page " & nCount & " loaded in: " & nTimer & "sec.", "", objDebug, MAX_LEN , 1, nInfo)
+					'
+					'  Validate portal page
+					If g_objIE.Document.Location.href = URL Then 			
+						LoginEVHS = True
+						Exit Do
+					End If 
+					Action = "LOGIN WITH SAVED CRED"
+			Case "LOGIN WITH SAVED CRED"
+					If InStr(g_objIE.Document.Location.href,"login") Then
+						For each Anchore in g_objIE.Document.getElementsByTagName("a")
+							If Anchore.InnerText = "Login" Then
+								Call TrDebug("Found Login Button: ", "", objDebug, MAX_LEN , 1, nInfo)
+								Anchore.Click()
+								nCount = nCount + 1
+								Exit For
+							End if 
+						Next
+						nTimer = 0
+						' Wait until page loaded
+						Do
+							WScript.Sleep 200
+							nTimer = nTimer + 0.2
+							If nTimer > 10 Then exit do
+						Loop While g_objIE.Busy		
+						Call TrDebug(Action & ": Page " & nCount & " loaded in: " & nTimer & "sec.", "", objDebug, MAX_LEN , 1, nInfo)
+						'  Validate portal page
+						If g_objIE.Document.Location.href = URL Then 			
+							LoginEVHS = True
+							Exit Do
+						End If
+						Action = "ENTER CRED"
+					Else 
+						Login_url = HostURL & "/portal/login"
+						Call TrDebug("Didn't find correct Login Page", "", objDebug, MAX_LEN , 1, nInfo)					
+						Call TrDebug("Loading default login portal url: " & Login_url, "", objDebug, MAX_LEN , 1, nInfo)											
+						g_objIE.navigate Login_url
+						nCount = nCount + 1
+						Do
+							WScript.Sleep 200
+							nTimer = nTimer + 0.2
+							If nTimer > 10 Then exit do
+						Loop While g_objIE.Busy		
+						Call TrDebug(Action & ": Page " & nCount & " loaded in: " & nTimer & "sec.", "", objDebug, MAX_LEN , 1, nInfo)
+						Action = "LOGIN WITH SAVED CRED"
+					End If
+			Case "ENTER CRED"
+					If InStr(g_objIE.Document.Location.href,"login") Then
+						strLogin = vCred(1)
+						'
+						'  GET SCREEN RESOLUTION
+						Call WriteScreenResolution(vIE_Scale, 0)
+						vvMsg(0,0) = "Sign In Schoolloop" 				: vvMsg(0,1) = "normal" : vvMsg(0,2) = HttpTextColor1
+						Call IE_PromptLoginPassword (objParentWin,vIE_Scale, vvMsg, 1,strLogin, strPassword, False, 0 )
+						g_objIE.document.getElementById("login_name").Value = vCred(1)
+						g_objIE.document.getElementById("password").Value = strPassword
+						For each Anchore in g_objIE.Document.getElementsByTagName("a")
+							If Anchore.InnerText = "Login" Then
+								Call TrDebug("Found Login Button: ", "", objDebug, MAX_LEN , 1, nInfo)
+								Anchore.Click()
+								nCount = nCount + 1
+								Exit For
+							End if 
+						Next
+						nTimer = 0
+						' Wait until page loaded
+						Do
+							WScript.Sleep 200
+							nTimer = nTimer + 0.2
+							If nTimer > 10 Then exit do
+						Loop While g_objIE.Busy		
+						Call TrDebug(Action & ": Page " & nCount & " loaded in: " & nTimer & "sec.", "", objDebug, MAX_LEN , 1, nInfo)
+						'  Validate portal page
+						If g_objIE.Document.Location.href = URL Then 			
+							LoginEVHS = True
+							Exit Do
+						Else 
+							Exit Do
+							Call TrDebug(Action & ": Can't Login to Schoolloop Portal" , "ERROR", objDebug, MAX_LEN , 1, 1)
+						End If
+						Action = "ENTER CRED"
+					End If
+		End Select
+	Loop
+End Function
+'-----------------------------------------
+'  Function ProgressReportExists(ByRef oTable, nInfo)
+'-----------------------------------------
+Function ProgressReportExists(ByRef oTable, nInfo)
+Dim Anchore
+		ProgressReportExists = False
+		For Each Anchore in oTable.getElementsByTagName("a")
+			If Anchore.InnerText = "Progress Report" Then
+				ProgressReportExists = True
+				Exit For
+			End If
+		Next
+End Function
+'-----------------------------------------
+'  Function GetClassroom(ByRef oTable, ByRef vAcademics, )
+'-----------------------------------------
+Function GetClassroom(ByRef oTable, ByRef vAcademics, nIndex, nInfo)
+Dim Anchore, objRegEx
+	Set objRegEx = CreateObject("VBScript.RegExp")
+	objRegEx.Global = True
+	objRegEx.Pattern = "Progress Report"
+	GetClassroom	= False
+	For Each Anchore in oTable.getElementsByTagName("a")
+		If Not objRegEx.Test(Anchore.InnerText) Then
+			GetClassroom = True
+			vAcademics(0,nIndex) = Anchore.InnerText
+			Exit For 
+		End If
+	Next
+End Function
+'-----------------------------------------
+'  Function GetProgressReportHref(ByRef oTable, ByRef vAcademics, )
+'-----------------------------------------
+Function GetProgressReportHref(ByRef oTable, ByRef vAcademics, nIndex, nInfo)
+Dim Anchore, objRegEx
+	Set objRegEx = CreateObject("VBScript.RegExp")
+	objRegEx.Global = True
+	objRegEx.Pattern = "Progress Report"
+	GetProgressReportHref	= False
+	For Each Anchore in oTable.getElementsByTagName("a")
+		If objRegEx.Test(Anchore.InnerText) Then
+			GetProgressReportHref = True
+			vAcademics(UBound(vAcademics,1)-1,nIndex) = Anchore.Href
+			Exit For 
+		End If
+	Next
+End Function
+'-----------------------------------------
+'  Function GetGrade(ByRef oTable, ByRef vAcademics, )
+'-----------------------------------------
+Function GetGrade(ByRef oTable, ByRef vAcademics, nIndex, nInfo)
+Dim oDiv, objRegEx
+	Set objRegEx = CreateObject("VBScript.RegExp")
+	objRegEx.Global = True
+	GetGrade	= False
+	objRegEx.Pattern = "^[ABCDEF][-\+]?"
+	For Each oDiv in oTable.getElementsByTagName("div")
+	'Call TrDebug("-->" & oDiv.InnerText, "", objDebug, MAX_LEN , 1, nInfo)
+		If objRegEx.Test(oDiv.InnerText) Then
+			GetGrade = True
+			vAcademics(1,nIndex) = Trim(oDiv.InnerText)
+			Exit For
+		End If
+	Next
+End Function
+'-----------------------------------------
+'  Function GetScore(ByRef oTable, ByRef vAcademics, )
+'-----------------------------------------
+Function GetScore(ByRef oTable, ByRef vAcademics, nIndex, nInfo)
+Dim oDiv, objRegEx
+	Set objRegEx = CreateObject("VBScript.RegExp")
+	objRegEx.Global = True
+	GetScore	= False
+	objRegEx.Pattern = "^\d.{0,5}%"
+	For Each oDiv in oTable.getElementsByTagName("div")
+		'Call TrDebug("-->" & oDiv.InnerText, "", objDebug, MAX_LEN , 1, nInfo)
+		If objRegEx.Test(oDiv.InnerText) Then
+			GetScore = True
+			vAcademics(2,nIndex) = Trim(oDiv.InnerText)
+			Exit For
+		End If
+	Next
+End Function
+'-------------------------------------------------------------
+'    Function WriteScreenResolution(vIE_Scale, intX,intY)
+'-------------------------------------------------------------
+Function WriteScreenResolution(ByRef vIE_Scale, nDebug)
+Dim g_objIE, intX, intY, intXreal, intYreal, vScr
+Dim vScreen(6), stdOutFile
+	stdOutFile = "ks-screen.dat"
+    Redim vIE_Scale(2,3)
+	nInd = 0
+	Call Set_IE_obj(g_objIE)
+	With g_objIE
+		.Visible = False
+		.Offline = True	
+		.navigate "about:blank"
+		Do
+			WScript.Sleep 200
+		Loop While g_objIE.Busy	
+		.Document.Body.innerHTML = "<p>TEST</p>"
+		.MenuBar = False
+		.StatusBar = False
+		.AddressBar = False
+		.Toolbar = False		
+		.Document.body.scroll = "no"
+		.Document.body.Style.overflow = "hidden"
+		.Document.body.Style.border = "None " & HttpBdColor1
+		.Height = 100
+		.Width = 100
+    	OffsetX = .Width - .Document.body.clientWidth
+		OffsetY = .Height - .Document.body.clientHeight
+		If GetWin32Screen(".", vScr, nDebug) Then 
+			 intXreal = vScr(0)
+			 intYreal = vScr(1)
+		Else 
+			.FullScreen = True
+			.navigate "about:blank"	
+			 intXreal = .width
+			 intYreal = .height
+	    End If 
+		.Quit
+	End With
+	If intXreal => 1440 Then intX = 1920 else intX = intXreal
+	If intYreal => 900 Then intY = 1080  else intY = intYreal
+	vIE_Scale(0,0) = intX : vIE_Scale(0,1) = OffsetX : vIE_Scale(0,2) = intXreal 
+	vIE_Scale(1,0) = intY : vIE_Scale(1,1) = OffsetY : vIE_Scale(1,2) = intYreal
+	Set g_objIE = Nothing
+End Function
+'------------------------------------------------------------------------------
+'      Function ASKS USER TO ENTER PASSWORD
+'------------------------------------------------------------------------------
+ Function IE_PromptLoginPassword (objParentWin, vIE_Scale, vLine, nLine, ByRef strUsername, ByRef strPassword, Confirm, nDebug )
+    Dim strPID
+	Dim intX
+    Dim intY
+	Dim WindowH, WindowW
+	Dim nFontSize_Def, nFontSize_10, nFontSize_12
+	Dim g_objIE, g_objShell
+	intX = 1920
+	intY = 1080
+	Dim IE_Menu_Bar
+	Dim  IE_Border
+	Const IE_REG_KEY = "HKEY_CURRENT_USER\Software\Microsoft\Internet Explorer\Main\Window Title"
+	'-----------------------------------------------------------------
+	'  GET THE TITLE NAME USED BY IE EXPLORER WINDOW
+	'-----------------------------------------------------------------
+	On Error Resume Next
+		Err.Clear
+		IE_Window_Title =  objShell.RegRead(IE_REG_KEY)
+		if Err.Number <> 0 Then 
+			IE_Window_Title = "Internet Explorer"
+		End If
+	On Error Goto 0
+	IE_Window_Title = "KSLD - " & IE_Window_Title
+	strPassword = "DO NOT MATCH"
+	IE_PromptLoginPassword = False	
+	
+	'----------------------------------------
+	' SCREEN RESOLUTION
+	'----------------------------------------
+	intX = 1920
+	intY = 1080
+	intX = vIE_Scale(0,2) : IE_Border = vIE_Scale(0,1) : intY = vIE_Scale(1,2) : IE_Menu_Bar = vIE_Scale(1,1)
+	nRatioX = vIE_Scale(0,0)/1920
+    nRatioY = vIE_Scale(1,0)/1080
+	Call Set_IE_obj (g_objIE)
+	g_objIE.Offline = True
+	g_objIE.navigate "about:blank"
+	' This loop is required to allow the IE object to finish loading...
+	Do
+		WScript.Sleep 200
+	Loop While g_objIE.Busy
+	nHeader = Round (12 * nRatioY,0)
+	LineH = Round (12 * nRatioY,0)
+	nTab = 20
+	nFontSize_10 = Round(10 * nRatioY,0)
+	nFontSize_12 = Round(12 * nRatioY,0)
+	nFontSize_14 = Round(14 * nRatioY,0)
+	nFontSize_Def = Round(16 * nRatioY,0)
+	nButtonX = Round(80 * nRatioX,0)
+	nButtonY = Round(40 * nRatioY,0)
+	If nButtonX < 50 then nButtonX = 50 End If
+	If nButtonY < 30 then nButtonY = 30 End If
+	CellW = Round(330 * nRatioX,0)
+	ColumnW1 = Round(150 * nRatioX,0)
+	CellH = 2 * (nLine + 7) * LineH
+	WindowW = IE_Border + CellW
+	WindowH = IE_Menu_Bar + CellH
+	If Confirm Then 
+	    CellH = CellH + 3 * 2 * LineH 
+		nOrder = 1
+    Else 
+	    nOrder = 0
+	End If
+	WindowW = IE_Border + CellW
+	WindowH = IE_Menu_Bar + CellH
+    '----------------------------------------------
+    '   MAIN COLORS OF THE FORM
+    '----------------------------------------------		
+	BackGroundColor = "grey"
+	ButtonColor = HttpBgColor2
+	InputBGColor = HttpBgColor4
+	MainTextColor = HttpTextColor1
+	g_objIE.Document.body.Style.FontFamily = "Helvetica"
+	g_objIE.Document.body.Style.FontSize = nFontSize_Def
+	g_objIE.Document.body.scroll = "no"
+	g_objIE.Document.body.Style.overflow = "hidden"
+	g_objIE.Document.body.Style.border = "none " & BackGroundColor
+	g_objIE.Document.body.Style.background = BackGroundColor
+	g_objIE.Document.body.Style.color = BackGroundColor
+	g_objIE.Top = (intY - WindowH)/2
+	g_objIE.Left = (intX - WindowW)/2
+	'----------------------------------------------------------
+	'    TITLE
+	'----------------------------------------------------------
+	strHTMLBody = strHTMLBody &_
+		"<table border=""1"" cellpadding=""1"" cellspacing=""1"" style="" position: absolute; left: 0px; top: 0px;" &_
+		" border-collapse: collapse; border-style: none; border width: 1px; border-color: " & HttpBgColor2 & "; background-color: "& HttpBgColor2 & ";" &_
+		"width: " & CellW & "px;"">" & _
+		"<tbody>"	
+	For nInd = 0 to nLine - 1
+		 If vLine(nInd,2) = HttpTextColor1 Then vLine(nInd,2) = MainTextColor
+		strHTMLBody = strHTMLBody &_
+		"<tr>" &_
+			"<td style=""border-style: none; background-color: " & HttpBgColor2 & ";"" class=""oa1"" height=""" &  2 * LineH & """ width=""" & CellW & """>" & _
+				"<p style=""text-align: center; font-family: 'arial narrow';font-size: " & nFontSize_12 & ".0pt; font-weight: " & vLine(nInd,1) & "; color: " & vLine(nInd,2) & """>" & vLine(nInd,0) & "</p>" &_
+			"</td>" &_
+		"</tr>"
+	Next
+	strHTMLBody = strHTMLBody & "</tbody></table>"
+	
+	'----------------------------------------------------------
+	'    MAIN FORM FOR ENTERING LOGON AND PASSWORD
+	'----------------------------------------------------------
+	TableW = CellW
+	ColumnW_1 = 3 * Int(TableW/3)
+	ColumnW_2 = TableW - ColumnW_1
+	strHTMLBody = strHTMLBody &_
+		"<table border=""1"" cellpadding=""1"" cellspacing=""1"" style="" position: absolute; left: 0px; top: " & (nLine + 1) * LineH * 2 & "px;" &_
+		" border-collapse: collapse; border-style: none; border width: 1px; border-color: " & HttpBgColor5 & "; background-color: none;;" &_
+		"width: " & TableW & "px;"">" & _
+		"<tbody>"		
+	'----------------------------------------------------	
+	'  ROW 1
+	'----------------------------------------------------
+	strHTMLBody = strHTMLBody & _
+	"<tr>" &_
+		"<td style=""border-style: none; background-color: none;""class=""oa1"" height=""" &  2 * LineH & """ width=""" & ColumnW_1 & """>" & _
+			"<p style=""position: relative; left: " & Int(nTab/2) & "px; bottom: -3px; font-size: " & nFontSize_12 & ".0pt; font-family: 'arial narrow'; color: " & MainTextColor &_
+			"; font-weight: bold;"">LOGIN NAME</p>" &_
+		"</td>" &_
+		"<td style=""border-style: none; background-color: none;""class=""oa1"" height=""" &  2 * LineH & """ width=""" & ColumnW_1 & """>" & _
+		"</td>" &_
+	"</tr>"		
+	'----------------------------------------------------	
+	'  ROW 2
+	'----------------------------------------------------
+	strHTMLBody = strHTMLBody & _
+	"<tr>" &_
+		"<td style=""border-style: none; background-color: none;"" align=""center"" class=""oa1"" height=""" & 2 * LineH & """ >" & _
+			"<input name=UserName style=""text-align: center;font-size: " & nFontSize_12 & ".0pt; border-style: None; font-family: 'Helvetica'; color: " & HttpTextColor2 &_
+			"; border-radius: 10px " &_
+			"; background-color: " & InputBGColor & "; font-weight: Normal;"" AccessKey=p size=20 maxlength=25 tabindex=1>" &_
+		"</td>" &_
+		"<td style=""border-style: none; background-color: none;"" align=""center"" class=""oa1"" height=""" &  2 * LineH & """ width=""" & ColumnW_1 & """>" & _
+		   "<button style=""font-weight: bold; border-style: None; background-color: " & HttpBgColor2 & "; color: " & HttpTextColor2 &_
+			"; width:" & nButtonX & ";height:" & 2 * LineH & "; font-family: 'arial narrow';""" & _
+			"id='EXIT' name='Cancel' AccessKey='C' tabindex=" & nOrder + 4 & " onclick=document.all('ButtonHandler').value='Cancel';>CANCEL</button>" & _		    
+		"</td>" &_		
+	"</tr>"
+	'----------------------------------------------------	
+	'  ROW 3 (EMPTY)
+	'----------------------------------------------------
+	strHTMLBody = strHTMLBody & _
+	"<tr>" &_
+		"<td style=""border-style: none; background-color: none;""class=""oa1"" height=""" &  LineH & """>" & _
+		"</td>" &_
+		"<td style=""border-style: none; background-color: none;""class=""oa1"" height=""" &  LineH & """>" & _
+		"</td>" &_
+	"</tr>"
+	'----------------------------------------------------	
+	'  ROW 4
+	'----------------------------------------------------
+	strHTMLBody = strHTMLBody & _
+	"<tr>" &_
+		"<td style=""border-style: none; background-color: none;""class=""oa1"" height=""" &  2 * LineH & """ >" & _
+			"<p style=""position: relative; left: " & Int(nTab/2) & "px; bottom: -3px; font-size: " & nFontSize_12 & ".0pt; font-family: 'arial narrow'; color: " & MainTextColor &_
+			"; font-weight: bold;"">PASSWORD</p>" &_
+		"</td>" &_
+		"<td style=""border-style: none; background-color: none;""class=""oa1"" height=""" &  2 * LineH & """ >" & _
+		"</td>" &_
+	"</tr>"			
+	'----------------------------------------------------	
+	'  ROW 5
+	'----------------------------------------------------
+	strHTMLBody = strHTMLBody & _
+	"<tr>" &_
+		"<td style=""border-style: none; background-color: none;"" align=""center"" class=""oa1"" height=""" & 2 * LineH & """>" & _
+			"<input id='PASSWD' name=Password style=""text-align: center;font-size: " & nFontSize_12 & ".0pt; border-style: None; font-family: 'Helvetica'; color: " & HttpTextColor2 &_
+			"; border-radius: 10px " &_
+			"; background-color: " & InputBGColor & "; font-weight: Normal;"" AccessKey=p size=20 maxlength=32 tabindex=2 " & _
+			"type=password onkeydown=""if (event.keyCode == 13) document.all('ButtonHandler').value='OK'"" > " &_
+		"</td>" &_
+		"<td style=""border-style: none; background-color: none;"" align=""center"" class=""oa1"" height=""" &  2 * LineH & """ width=""" & ColumnW_1 & """>" & _
+		   "<button style=""font-weight: bold; border-style: None; background-color: " & HttpBgColor2 & "; color: " & HttpTextColor2 &_
+			"; width:" & nButtonX & ";height:" & 2 * LineH & "; font-family: 'arial narrow';""" & _
+			"id='OK' name='OK' AccessKey='C' tabindex=" & nOrder + 3 & " onclick=document.all('ButtonHandler').value='OK';>SIGN IN</button>" & _		    
+		"</td>" &_				
+	"</tr>"
+	'----------------------------------------------------	
+	'  ROW 6 (EMPTY)
+	'----------------------------------------------------
+	strHTMLBody = strHTMLBody & _
+	"<tr>" &_
+		"<td style=""border-style: none; background-color: none;""class=""oa1"" height=""" &  LineH & """>" & _
+		"</td>" &_
+		"<td style=""border-style: none; background-color: none;""class=""oa1"" height=""" &  LineH & """>" & _
+		"</td>" &_
+	"</tr>"
+	'----------------------------------------------------	
+	'  CONFIRM PASSWORD ROW
+	'----------------------------------------------------
+	If Confirm Then 
+		'----------------------------------------------------	
+		'  ROW 7
+		'----------------------------------------------------
+		strHTMLBody = strHTMLBody & _
+		"<tr>" &_
+			"<td style=""border-style: none; background-color: none;""class=""oa1"" height=""" &  2 * LineH & """ >" & _
+				"<p style=""position: relative; left: " & Int(nTab/2) & "px; bottom: -3px; font-size: " & nFontSize_12 & ".0pt; font-family: 'arial narrow'; color: " & MainTextColor &_
+				"; font-weight: bold;"">CONFIRM PASSWORD</p>" &_
+			"</td>" &_
+			"<td style=""border-style: none; background-color: none;""class=""oa1"" height=""" &  2 * LineH & """ >" & _
+			"</td>" &_
+		"</tr>"			
+		'----------------------------------------------------	
+		'  ROW 8
+		'----------------------------------------------------
+		strHTMLBody = strHTMLBody & _
+		"<tr>" &_
+			"<td style=""border-style: none; background-color: none;"" align=""center"" class=""oa1"" height=""" & 2 * LineH & """>" & _
+				"<input id='PASSWD2' name=Password2 style=""text-align: center;font-size: " & nFontSize_12 & ".0pt; border-style: None; font-family: 'Helvetica'; color: " & HttpTextColor2 &_
+				"; border-radius: 10px " &_
+				"; background-color: " & InputBGColor & "; font-weight: Normal;"" AccessKey=p size=20 maxlength=32 tabindex=3 " & _
+				"type=password onkeydown=""if (event.keyCode == 13) document.all('ButtonHandler').value='OK'"" > " &_
+			"</td>" &_
+			"<td style=""border-style: none; background-color: none;"" align=""center"" class=""oa1"" height=""" &  2 * LineH & """>" & _
+			"</td>" &_				
+		"</tr>"
+	End If
+	strHTMLBody = strHTMLBody & "</tbody></table>"
+    strHTMLBody = strHTMLBody &_
+                "<input name='ButtonHandler' type='hidden' value='Nothing Clicked Yet'>"
+			
+	g_objIE.Document.Body.innerHTML = strHTMLBody
+	g_objIE.MenuBar = False
+	g_objIE.StatusBar = False
+	g_objIE.AddressBar = False
+	g_objIE.Toolbar = False
+	g_objIE.height = WindowH
+	g_objIE.width = WindowW
+	g_objIE.document.Title = "Login and Password"
+	g_objIE.document.getElementById("OK").style.borderRadius = "10px"
+	g_objIE.document.getElementById("EXIT").style.borderRadius = "10px"
+	g_objIE.document.getElementById("OK").style.backgroundcolor = ButtonColor
+	g_objIE.document.getElementById("EXIT").style.backgroundcolor = ButtonColor
+	If Confirm Then
+	    g_objIE.Document.getElementById("OK").innerHTML = "OK"
+	Else 
+	   	g_objIE.Document.getElementById("OK").innerHTML = "SIGN IN"
+	End If
+	
+	g_objIE.Visible = False
+	Do
+		WScript.Sleep 100
+	Loop While g_objIE.Busy	
+	Set g_objShell = WScript.CreateObject("WScript.Shell")
+	g_objIE.Visible = True
+	g_objIE.Document.All("UserName").Focus
+	g_objIE.Document.All("UserName").Value = strUsername
+'    g_objIE.Document.body.addeventlistener "keydown", GetRef("KeyLA"), false
+	Do
+		On Error Resume Next
+		Err.Clear
+		strNothing = g_objIE.Document.All("ButtonHandler").Value
+		if Err.Number <> 0 then exit do
+		On Error Goto 0
+		Select Case strNothing
+			Case "Cancel"
+				' The user clicked Cancel. Exit the loop
+				IE_PromptLoginPassword = False				
+				Exit Do
+			Case "OK"
+				' strUsername = g_objIE.Document.All("Username").Value
+				Select Case Confirm
+					Case True
+						if g_objIE.Document.All("Password").Value = g_objIE.Document.All("Password2").Value  and _
+						   InStr(g_objIE.Document.All("Password").Value," ") = 0 and _
+						   g_objIE.Document.All("Password").Value <> "" Then 
+							strUsername = g_objIE.Document.All("UserName").Value
+							strPassword = g_objIE.Document.All("Password").Value
+							IE_PromptLoginPassword = True
+							Exit Do
+						Else
+							strUsername = g_objIE.Document.All("UserName").Value
+							strPassword = "DO NOT MATCH"
+							IE_PromptLoginPassword = True
+							Exit Do
+						End If 
+					Case False
+							strUsername = g_objIE.Document.All("UserName").Value
+							strPassword = g_objIE.Document.All("Password").Value
+							IE_PromptLoginPassword = True
+							Exit Do
+				End Select
+		End Select
+	    Wscript.Sleep 200
+    Loop
+	g_objIE.quit
+	Wscript.Sleep 200
+	Set g_objIE = Nothing
+	Set g_objShell = Nothing
+End Function
+'-------------------------------------------------
+'   Function SelectStudentPage(objIE, nInfo)
+'-------------------------------------------------
+Function SelectStudentPage(ByRef g_objIE, ByRef vCred, nInfo)
+Dim Anchore, Div, FoundPortalTitle, objDiv
+	Set objDiv = g_objIE.Document.getElementById("container_content")
+    FoundPortalTitle = False 
+	'
+	'   Validate Student's name for currently Loaded page
+	For each Div in objDiv.getElementsByTagName("div")
+		If FoundPortalTitle Then 
+			Call TrDebug("Currently Displayed Student: " & Div.InnerText, "", objDebug, MAX_LEN , 1, nInfo)
+			If InStr(Lcase(Div.InnerText), Lcase(vCred(3))) and InStr(Div.InnerText, Lcase(vCred(4))) Then 
+				SelectStudentPage = True
+				Exit Function
+			End If
+			Exit For
+		End If
+		If InStr(Div.InnerText, "Portal:") Then
+			FoundPortalTitle = True
+		End If 
+	Next
+	'
+	'   If wrong student page loaded then look for right studen's page link and click it
+	For each Anchore in g_objIE.Document.getElementsByTagName("a")
+		If InStr(Lcase(Anchore.InnerText), Lcase(vCred(3))) > 0 and InStr(Lcase(Anchore.InnerText), Lcase(vCred(4))) > 0 Then
+			Call TrDebug("Found Student Button: ", "", objDebug, MAX_LEN , 1, nInfo)
+			Anchore.Click()
+			' Wait until page loaded
+			Do
+				WScript.Sleep 200
+				nTimer = nTimer + 0.2
+				If nTimer > 10 Then exit do
+			Loop While g_objIE.Busy		
+			Call TrDebug("Page loaded OK ", "", objDebug, MAX_LEN , 1, nInfo)
+			nCount = nCount + 1
+			Exit For
+		End if 
+	Next
+	'
+	'   Validate Student's name for currently Loaded page
+	FoundPortalTitle = False
+	Set objDiv = g_objIE.Document.getElementById("container_content")
+	For each Div in objDiv.getElementsByTagName("div")
+		If FoundPortalTitle Then 
+			Call TrDebug("Currently Displayed Student: " & Div.InnerText, "", objDebug, MAX_LEN , 1, nInfo)
+			If InStr(Lcase(Div.InnerText), Lcase(vCred(3))) and InStr(Div.InnerText, Lcase(vCred(4))) Then 
+				SelectStudentPage = True
+				Exit Function
+			End If
+			Exit For
+		End If
+		If InStr(Div.InnerText, "Portal:") Then
+			FoundPortalTitle = True
+		End If 
+	Next
+End Function 
+'-----------------------------------------
+'  Function GetClassroom(ByRef oTable, ByRef vAcademics, )
+'-----------------------------------------
+Function GetAssessmentsList(ByRef g_objIE, ByRef vAcademics, nIndex, nInfo)
+Dim Anchore, objRegEx, oRow, oTable, nColDate, MyTable
+Dim nColAssessment, nColScore,nColWeight,nColWScore,nColCategory
+Dim FoundCategoryTable, FoundAssessmentTable
+Dim oString
+Dim vCategory
+Set objRegEx = CreateObject("VBScript.RegExp")
+	' 
+	' Define variables
+	objRegEx.Global = False	
+	GetAssessmentsList = False		
+	FoundAssessmentTable = False
+	nColCategory = -1
+	nColWeight = -1
+	nColWScore = -1
+	Redim vCategory(1,3)
+	'
+	'  Look for Category list
+	If GetHTMLTableByRowName(g_objIE,oTable,"Category:") Then 
+		Set oRow = oTable.rows.item(0)
+		For each oCell in oRow.cells
+			If InStr(oCell.InnerText,"Category:")     Then nColCategory = oCell.cellIndex 
+			If InStr(oCell.InnerText,"Weight:")       Then nColWeight = oCell.cellIndex
+			If InStr(oCell.InnerText,"Weight Score:") Then nColWScore = oCell.cellIndex
+		Next
+		'
+		'  Validate if there is any category listed in the table
+		If oTable.rows.length > 1 Then 
+			Redim vCategory(oTable.rows.length-1,3)
+			For nRow = 1 to oTable.rows.length-1
+				Set oRow = oTable.rows.item(nRow)
+				If nColCategory <> -1 Then vCategory(nRow-1,0) = oRow.Cells.Item(nColCategory).InnerText
+				If nColWeight <> -1   Then vCategory(nRow-1,1) = oRow.Cells.Item(nColWeight).InnerText
+				If nColWScore <> -1   Then vCategory(nRow-1,2) = oRow.Cells.Item(nColWScore).InnerText
+			Next
+		End If		
+	End If
+	'
+	'  Look for Assessment table with scores
+	If GetHTMLTableByRowName(g_objIE,oTable,"Assessment:") Then 
+		If oTable.rows.length = 1 Then 
+			Call TrDebug("Assessment Table for : " & vAcademics(3,nIndex) & " has no data", "", objDebug, MAX_LEN , 1, nInfo)
+			vAcademics(7,nIndex) = 0
+			Exit Function
+		End If 
+		Set oRow = oTable.rows.item(0)
+		'   Validate assessment table 
+		If oRow.cells.length = 1 Then 
+			Call TrDebug("Assessment Table for : " & vAcademics(3,nIndex) & " has no data", "", objDebug, MAX_LEN , 1, nInfo)
+			vAcademics(7,nIndex) = 0
+			Exit Function
+		End If 
+		'   Get columns' index
+		For each oCell in oRow.cells
+			If InStr(oCell.InnerText,"Assessment:") Then nColAssessment = oCell.cellIndex 
+			If InStr(oCell.InnerText,"Score:")      Then nColScore = oCell.cellIndex
+			If InStr(oCell.InnerText,"Due:")        Then nColDate = oCell.cellIndex
+		Next
+	Else 
+		Call TrDebug("Can't Find Assessment Table for : " & vAcademics(3,nIndex), "", objDebug, MAX_LEN , 1, nInfo)
+		vAcademics(7,nIndex) = 0
+		Exit Function
+	End If
+	'
+	' Set initial values
+	vAcademics(3,nIndex) = ""
+	vAcademics(4,nIndex) = ""
+	vAcademics(5,nIndex) = ""
+	vAcademics(6,nIndex) = ""	
+	vAcademics(7,nIndex) = oTable.rows.length - 1
+	'
+	' Read Assessments list
+	For nRow = 1 to oTable.rows.length - 1
+		Set oRow = oTable.rows.Item(nRow)
+		Set oCell = oRow.Cells.Item(nColAssessment)
+		'  Read from Asesment Cell
+		Call ReadAssessmentCategory(oCell.InnerText,vCategory,vAcademics, nIndex)
+		'  Read from Due Cell		
+		Set oCell = oRow.Cells.Item(nColScore)
+		objRegEx.Pattern = "\d{1,3}\.\d{1,2}%"
+		Set oString = objRegEx.Execute(oCell.InnerText)
+		If oString.Count > 0 _
+			Then vAcademics(4,nIndex) = vAcademics(4,nIndex) & oString.Item(0) & "," _
+			Else vAcademics(4,nIndex) = vAcademics(4,nIndex) & ",,"		
+		'  Read from Score Cell
+		Set oCell = oRow.Cells.Item(nColDate)
+		objRegEx.Pattern = "\d{1,2}/\d{1,2}/\d{1,2}"
+		Set oString = objRegEx.Execute(oCell.InnerText)
+		If oString.Count > 0 _
+			Then vAcademics(3,nIndex) = vAcademics(3,nIndex) & oString.Item(0) & "," _
+			Else vAcademics(3,nIndex) = vAcademics(3,nIndex) & ",,"
+	Next
+	GetAssessmentsList = True
+End Function
+'-----------------------------------------------------
+'   Function GetHTMLTableByRowName(g_objIE, oTable, strTitle)
+'----------------------------------------------------
+Function GetHTMLTableByRowName(ByRef g_objIE, ByRef oTable, strTitle)
+	GetHTMLTableByRowName = False
+    For each oTable in g_objIE.Document.getElementsByTagName("table")
+		If oTable.getElementsByTagName("table").length = 0 Then 
+			If oTable.rows.length > 0 Then 
+				Set oRow = oTable.rows.item(0)
+				If oRow.cells.length > 0 Then 
+					For each oCell in oRow.cells
+						If InStr(oCell.InnerText,strTitle) Then 
+							GetHTMLTableByRowName = True 
+							Exit Function
+						End If
+					Next
+				End If
+			End If
+		End If
+	Next
+End Function
+'-------------------------------------------------------------
+' Function ReadAssessmentCategory(strText,vCategory,vAcademics, nIndex)
+'------------------------------------------------------------
+Function ReadAssessmentCategory(strText,vCategory,vAcademics, nIndex)
+Dim objRegEx, nInd
+    ReadAssessmentCategory = False
+	Set objRegEx = CreateObject("VBScript.RegExp")
+	' 
+	' Define variables
+	objRegEx.Global = False	
+	For nInd = 0 to UBound(vCategory,1)	
+		Do
+			If vCategory(nInd,0) = "" Then Exit Do
+			objRegEx.Pattern = "[\t\r\n\v\f]"
+			vCategory(nInd,0) = objRegEx.Replace(vCategory(nInd,0),"")
+			objRegEx.Pattern = vCategory(nInd,0)
+			If objRegEx.Execute(strText).Count > 0 Then 
+				vAcademics(5,nINdex) = vAcademics(5,nIndex) & vCategory(nInd,0) & ","
+				vAcademics(6,nINdex) = vAcademics(6,nIndex) & vCategory(nInd,1) & ","
+				ReadAssessmentCategory = True
+				Exit Function
+			End If
+			Exit Do
+		Loop
+	Next
+	vAcademics(5,nIndex) = vAcademics(5,nIndex) & ","
+	vAcademics(6,nIndex) = vAcademics(6,nIndex) & ","
+End Function
+'-----------------------------------------------------------------------------------
+' Function GetFileLineCountSelect - Returns number of lines int the text file
+'-----------------------------------------------------------------------------------
+  Function GetFileLineCountSelect(strFileName, ByRef vFileLines,strChar1, strChar2, strChar3, nDebug)
+    Dim nIndex
+	Dim strLine
+	Dim objDataFileName
+	Dim objRegEx
+	Const EMPTY_STRING = "e-m-p-t-y"
+	Set objRegEx = CreateObject("VBScript.RegExp")
+	objRegEx.Global = False
+	
+	Call NormalizePatterm(strChar1, EMPTY_STRING)
+	Call NormalizePatterm(strChar2, EMPTY_STRING)
+	Call NormalizePatterm(strChar3, EMPTY_STRING)
+	
+    strFileWeekStream = ""	
+	If objFSO.FileExists(strFileName) Then 
+		On Error Resume Next
+		Err.Clear
+		Set objDataFileName = objFSO.OpenTextFile(strFileName)
+		If Err.Number <> 0 Then 
+			Call TrDebug("GetFileLineCountSelect: ERROR: CAN'T OPEN FILE:", strFileName, objDebug, MAX_LEN, 0, 1)
+			On Error Goto 0
+			Redim vFileLines(0)
+			GetFileLineCountSelect = 0
+			Exit Function
+		End If
+	Else
+	    Call TrDebug("GetFileLineCountSelect: ERROR: CAN'T FIND FILE:", strFileName, objDebug, MAX_LEN, 0, 1)
+		Redim vFileLines(0)
+		GetFileLineCountSelect = 0
+		Exit Function
+	End If 
+    Redim vFileLines(0)
+	Set objDataFileName = objFSO.OpenTextFile(strFileName)	
+	If nDebug = 1 Then objDebug.WriteLine "           NOW TRYING TO RIGHT INTO AN ARRAY        "
+	nIndex = 0
+    Do While objDataFileName.AtEndOfStream <> True
+		strLine = objDataFileName.ReadLine
+		TestLine = strLine
+		objRegEx.Pattern =".+"
+		If Not objRegEx.Test(TestLine) Then TestLine = EMPTY_STRING
+		objRegEx.Pattern ="(^" & strChar1 & ")|(^" & strChar2 & ")|(^" & strChar3 & ")"
+		If 	objRegEx.Test(TestLine) = False Then 
+					Redim Preserve vFileLines(nIndex + 1)
+					vFileLines(nIndex) = strLine
+					If nDebug = 1 Then objDebug.WriteLine "GetFileLineCountSelect: vFileLines(" & nIndex & ")="  & vFileLines(nIndex) End If  
+					nIndex = nIndex + 1
+					bResult = True
+		End If
+		
+	Loop
+	objDataFileName.Close
+	Set objDataFileName = Nothing
+    GetFileLineCountSelect = nIndex
+End Function
+'-------------------------------------------------
+'  Function NormalizePatterm(strPattern)
+'-------------------------------------------------
+Function NormalizePatterm(ByRef strPattern, EmptyString)
+Dim vSpecualChars, Special
+	vSpecualChars = Array("\","$",".","[","]","{","}","(",")","?","*","+","|")
+	If strPattern = "" Then strPattern = EmptyString : Exit Function : End If
+	' If not an empty string
+	For Each Special in vSpecualChars
+		strPattern = Replace(strPattern,Special,"\" & Special)
+	Next
+	MsgBox strPattern
+End Function
+
+
+Function encrypt(Str, key)
+ Dim lenKey, KeyPos, LenStr, x, Newstr
+ 
+ Newstr = ""
+ lenKey = Len(key)
+ KeyPos = 1
+ LenStr = Len(Str)
+ str = StrReverse(str)
+ For x = 1 To LenStr
+	  On Error Resume Next
+      Newstr = Newstr & chr(Asc(Mid(str,x,1)) + Asc(Mid(key,KeyPos,1)))
+	  If Err.Number > 0 Then  MsgBox "1.=" & Mid(str,x,1) & chr(13) & "2.=" & Mid(key,KeyPos,1) : Exit For : End If
+	  On Error Goto 0
+      KeyPos = keyPos+1
+      If KeyPos > lenKey Then KeyPos = 1
+ Next
+ encrypt = Newstr
+End Function
+
+Function Decrypt(str,key)
+ Dim lenKey, KeyPos, LenStr, x, Newstr
+ 
+ Newstr = ""
+ lenKey = Len(key)
+ KeyPos = 1
+ LenStr = Len(Str)
+ 
+ str=StrReverse(str)
+ For x = LenStr to 1 Step - 1
+      Newstr = Newstr & chr(asc(Mid(str,x,1)) - Asc(Mid(key,KeyPos,1)))
+      KeyPos = KeyPos+1
+      If KeyPos > lenKey Then KeyPos = 1
+      Next
+      Newstr=StrReverse(Newstr)
+      Decrypt = Newstr
+End Function
+
+Function Crypt(key, str)
+	' str, key - strings, containing char from 32 to 126 ASCII code table
+	' return encrypt/decrypt string, on input error return empty string
+	Dim x, keyCharNum, strCharNum, diffCharNum, diffSum
+
+	For x = 1 To (Len(str) + Len(key) - Abs(Len(str) - Len(key)))/2
+		keyCharNum = Asc( Mid (key, (x-1) Mod Len(key) + 1, 1))
+		strCharNum = Asc( Mid (str, (x-1) Mod Len(str) + 1, 1))
+		If (keyCharNum > 126 Or keyCharNum < 32 Or strCharNum > 126 Or strCharNum < 32) Then
+			Crypt = ""
+			Exit For
+		End If
+		diffCharNum = keyCharNum - strCharNum
+		If (diffCharNum < 0) Then diffCharNum = diffCharNum + 126 - 32 + 1
+		diffSum = chr(diffCharNum + 32)
+		Crypt = Crypt & diffSum
+	Next
 End Function
