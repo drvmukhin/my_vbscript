@@ -1,7 +1,7 @@
 Set objShell = wscript.createobject( "wscript.shell")
 Set objFSO = wscript.CreateObject("Scripting.FileSystemObject")
 strDirectoryWork = objFSO.GetParentFolderName(wscript.ScriptFullName)
-strLaunch = "wscript " & strDirectoryWork & "\VBS_kill_process.vbs -n wscript.exe -c Kids_schedule_WIN_" 
+strLaunch = "wscript " & strDirectoryWork & "\VBS_kill_process.vbs -n chrome.exe -a" 
 								
 objShell.run strLaunch,0,False
 set objShell = Nothing

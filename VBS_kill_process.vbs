@@ -9,7 +9,7 @@ Set objApp = CreateObject("Shell.application")
 Dim strPID, strCmdLine, strParentPID, strAppName, KillAll
 Dim ShowLog, bVerbose,bMultipleInstanceAllowed
 bMultipleInstanceAllowed = False
-ShowLog = True
+ShowLog = False
 bVerbose = True
 nInfo = 0 
 nDebug = 0
@@ -72,6 +72,9 @@ Sub Main()
 	'
 	'  Open log file 
 	If Not OpenLogSession(objDebug, strDebugFile, UtilsFolder, bMultipleInstanceAllowed, ShowLog, bVerbose) Then Exit Sub
+	'
+	'
+	wscript.sleep 200
     '
 	'  Start main cycle
 	Select case KillAll
@@ -174,7 +177,12 @@ End Function
 Function GetWinAppAllPID(ByRef strPID, ByRef strParentPID, ByRef strCommandLine, strAppName, byRef vApp, nDebug)
 Dim objWMI, colItems
 Dim process
-Dim strUser, pUser, pDomain, wql
+Dim strUser, pUser, pDomain, wql, objFSO, MyScriptName
+	Set objFSO = wscript.CreateObject("Scripting.FileSystemObject")
+	MyScriptName = objFSO.GetFile(wscript.ScriptFullName).Name
+	Call TrDebug ("GetWinAppAll : ScriptName Runnig: ",MyScriptName,objDebug, MAX_LEN, 1, nDebug)
+	Set objFSO = Nothing
+
     Redim vApp(1)
 	strUser = GetScreenUserSYS()
 	GetWinAppAllPID = False
@@ -182,7 +190,7 @@ Dim strUser, pUser, pDomain, wql
 		On Error Resume Next
 		Set objWMI = GetObject("winmgmts:\\127.0.0.1\root\cimv2")
 		If Err.Number <> 0 Then 
-				Call TrDebug ("GetMyPID ERROR: CAN'T CONNECT TO WMI PROCESS OF THE SERVER","",objDebug, MAX_LEN, 1, nDebug)
+				Call TrDebug ("GetWinAppAllPID ERROR: CAN'T CONNECT TO WMI PROCESS OF THE SERVER","",objDebug, MAX_LEN, 1, nDebug)
 				On error Goto 0 
 				Exit Do
 		End If 
@@ -190,22 +198,25 @@ Dim strUser, pUser, pDomain, wql
 		On Error Resume Next
 		Set colItems = objWMI.ExecQuery(wql)
 		If Err.Number <> 0 Then
-				Call TrDebug ("GetMyPID ERROR: CAN'T READ QUERY FROM WMI PROCESS OF THE SERVER","",objDebug, MAX_LEN, 1, nDebug)
+				Call TrDebug ("GetWinAppAllPID ERROR: CAN'T READ QUERY FROM WMI PROCESS OF THE SERVER","",objDebug, MAX_LEN, 1, nDebug)
 				On error Goto 0 
 				Set colItems = Nothing
 				Exit Do
 		End If 
 		On error Goto 0 
 		nCount = 0
+		On Error Resume Next
+		Err.Clear
 		For Each process In colItems
 			process.GetOwner  pUser, pDomain 
+			If Err.Number > 0 Then exit for
 			Call TrDebug ("GetWinAppPID: Process Name (PID): " & process.Name & " (" & process.ProcessId & ")", "",objDebug, MAX_LEN, 1, nDebug)
 			Call TrDebug ("GetWinAppPID: Owner: " & process.CSName & "/" & pUser, "",objDebug, MAX_LEN, 1, nDebug) 
 			Call TrDebug ("GetWinAppPID: CMD: " & process.CommandLine, "",objDebug, MAX_LEN, 1, nDebug) 
 			Call TrDebug ("GetWinAppPID: ParentPID:" &  Process.ParentProcessId, "",objDebug, MAX_LEN, 1, nDebug) 			
 			Select Case Lcase(strCommandLine)
 			    Case "null", "none", ""
-					If pUser = strUser then 
+					If pUser = strUser and InStr(process.CommandLine,MyScriptName) = 0 then 
 						strPID = process.ProcessId
 						nLine = Ubound(Split(process.CommandLine,"\"))
 						Redim Preserve vApp(nCount + 1)
@@ -216,7 +227,7 @@ Dim strUser, pUser, pDomain, wql
 						GetWinAppAllPID = True
 					End If
 			    Case Else
-					If pUser = strUser and InStr(process.CommandLine,strCommandLine) then 
+					If pUser = strUser and InStr(process.CommandLine,strCommandLine) and InStr(process.CommandLine,MyScriptName) = 0 then 
 					    'strCommandLine = process.CommandLine
 						strPID = process.ProcessId
 						nLine = Ubound(Split(process.CommandLine,"\"))
@@ -229,6 +240,7 @@ Dim strUser, pUser, pDomain, wql
 					End If
 			End Select
 		Next
+		On Error Goto 0 
 		Set colItems = Nothing
 		Exit Do
 	Loop
@@ -239,8 +251,12 @@ End Function
 '----------------------------------------------------------------
 Function KillWinAppPID(ByRef strPID, strCommandLine, strAppName, nDebug)
 Dim objWMI, colItems
-Dim process
+Dim process, MyScriptName
 Dim strUser, pUser, pDomain, wql
+Dim objFSO
+	Set objFSO = wscript.CreateObject("Scripting.FileSystemObject")
+	MyScriptName = objFSO.GetFile(wscript.ScriptFullName).Name
+	Set objFSO = Nothing
 	strUser = GetScreenUserSYS()
 	KillWinAppPID = 0
 	Do 
@@ -268,13 +284,20 @@ Dim strUser, pUser, pDomain, wql
 			nMode = 0
 			Exit Do
 		Loop
+		On Error Resume Next
+		Err.clear
 		For Each process In colItems
 			process.GetOwner  pUser, pDomain
+			If Err.Number > 0 Then 
+				Call TrDebug ("KillWinAppPID: Process Name (PID): " & process.Name & " (" & process.ProcessId & ")", "",objDebug, MAX_LEN, 1, 1)
+				Call TrDebug ("KillWinAppPID: Owner: " & process.CSName & "/" & pUser, "",objDebug, MAX_LEN, 1, 1) 
+				Exit For 
+			End If 
 			Call TrDebug ("KillWinAppPID: Process Name (PID): " & process.Name & " (" & process.ProcessId & ")", "",objDebug, MAX_LEN, 1, nDebug)
 			Call TrDebug ("KillWinAppPID: Owner: " & process.CSName & "/" & pUser, "",objDebug, MAX_LEN, 1, nDebug) 
 			Select Case nMode
 			    Case 0
-					If pUser = strUser then 
+					If pUser = strUser and InStr(process.CommandLine,MyScriptName) = 0 then 
 						Call TrDebug ("KillWinAppPID (0): Terminating the Process: Desktop user owns the process: " & strPID , "",objDebug, MAX_LEN, 1, nDebug)
 						process.Terminate()
 						KillWinAppPID = KillWinAppPID + 1
@@ -296,6 +319,7 @@ Dim strUser, pUser, pDomain, wql
 					End If
 			End Select
 		Next
+		On Error goto 0
 		Set colItems = Nothing
 		Exit Do
 	Loop
